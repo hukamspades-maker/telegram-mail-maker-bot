@@ -24,6 +24,7 @@ def generate_security_key() -> str:
 class DatabaseManager:
     def __init__(self, db_path: str = DATABASE_PATH):
         self.db_path = db_path
+        os.makedirs(os.path.dirname(os.path.abspath(self.db_path)), exist_ok=True)
 
     async def init_db(self):
         async with aiosqlite.connect(self.db_path) as db:

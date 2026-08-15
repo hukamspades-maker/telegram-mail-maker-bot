@@ -25,8 +25,12 @@ IMAP_USER = os.getenv("IMAP_USER", "catchall@hukam.bond")
 IMAP_PASSWORD = os.getenv("IMAP_PASSWORD", "secret")
 IMAP_POLL_INTERVAL = int(os.getenv("IMAP_POLL_INTERVAL", "15"))
 
-# Database Configuration
-DATABASE_PATH = os.getenv("DATABASE_PATH", str(BASE_DIR / "mail_bot.db"))
+# Database Configuration (Supports persistent Railway volume at /app/data/mail_bot.db)
+default_db_dir = BASE_DIR / "data"
+os.makedirs(default_db_dir, exist_ok=True)
+
+DATABASE_PATH = os.getenv("DATABASE_PATH", str(default_db_dir / "mail_bot.db"))
+os.makedirs(os.path.dirname(os.path.abspath(DATABASE_PATH)), exist_ok=True)
 
 # App Settings
 CLEANUP_INTERVAL_MINUTES = int(os.getenv("CLEANUP_INTERVAL_MINUTES", "5"))
