@@ -24,9 +24,8 @@ def generate_security_key() -> str:
 
 class DatabaseManager:
     def __init__(self, db_path: str = DATABASE_PATH):
-        import os
         self.db_path = db_path
-        os.makedirs(os.path.dirname(os.path.abspath(self.db_path)), exist_ok=True)
+        # Parent directory is guaranteed by config.py
 
     async def init_db(self):
         async with aiosqlite.connect(self.db_path) as db:
@@ -182,7 +181,6 @@ class DatabaseManager:
                 raise ValueError("An email alias with this address already exists.")
 
     async def login_with_security_key(self, user_id: int, address: str, security_key: str) -> Optional[Dict[str, Any]]:
-        """Restores / logs in to an email alias using Security Key."""
         address_clean = address.lower().strip()
         key_clean = security_key.strip().upper()
 
@@ -197,12 +195,10 @@ class DatabaseManager:
                     return None
 
                 alias_dict = dict(row)
-                # Re-assign user_id and activate alias
                 await db.execute(
                     "UPDATE email_aliases SET user_id = ?, is_active = 1 WHERE id = ?",
                     (user_id, alias_dict["id"])
                 )
-                # Re-assign received emails user_id
                 await db.execute(
                     "UPDATE received_emails SET user_id = ? WHERE alias_address = ?",
                     (user_id, address_clean)

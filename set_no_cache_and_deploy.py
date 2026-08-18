@@ -1,6 +1,7 @@
 import urllib.request
 import json
 import ssl
+import subprocess
 
 TOKEN = "9a5ae91c-0e69-4db5-8097-74c3f87c42cc"
 PROJECT_ID = "2d6e959a-32e6-48f0-a478-b6f556bcf4b4"
@@ -34,8 +35,35 @@ def cf_graphql(query, variables=None):
         return {"error": e.code, "body": e.read().decode('utf-8')}
 
 def main():
-    print("1️⃣ Triggering Fresh Deployment of commit 3fcf8de...")
+    print("1️⃣ Setting NIXPACKS_NO_CACHE=1 on Railway to force complete cache purge...")
     q1 = cf_graphql("""
+        mutation variableCollectionUpsert($input: VariableCollectionUpsertInput!) {
+            variableCollectionUpsert(input: $input)
+        }
+    """, {
+        "input": {
+            "projectId": PROJECT_ID,
+            "environmentId": ENV_ID,
+            "serviceId": SERVICE_ID,
+            "variables": {
+                "BOT_TOKEN": "8985612343:AAGqO-hTyhoSfWKrWQOFqlOWZ4r4yTiB-44",
+                "ADMIN_IDS": "8603872187",
+                "DEFAULT_DOMAINS": "hukam.bond",
+                "DATABASE_PATH": "/app/data/mail_bot.db",
+                "NIXPACKS_NO_CACHE": "1"
+            }
+        }
+    })
+    print("Variables Result:", json.dumps(q1, indent=2))
+
+    print("\n2️⃣ Committing and Pushing Clean Code to GitHub...")
+    subprocess.run(["git", "add", "."], check=True)
+    subprocess.run(["git", "commit", "-m", "v1.0.7 - Clean database init without method level os call"], check=True)
+    subprocess.run(["git", "push", "origin", "main"], check=True)
+    print("✅ Pushed commit v1.0.7 to GitHub!")
+
+    print("\n3️⃣ Triggering Clean Build on Railway...")
+    q2 = cf_graphql("""
         mutation serviceInstanceDeploy($environmentId: String!, $serviceId: String!) {
             serviceInstanceDeploy(environmentId: $environmentId, serviceId: $serviceId)
         }
@@ -43,7 +71,7 @@ def main():
         "environmentId": ENV_ID,
         "serviceId": SERVICE_ID
     })
-    print("Deploy Result:", json.dumps(q1, indent=2))
+    print("Deploy Result:", json.dumps(q2, indent=2))
 
 if __name__ == "__main__":
     main()
