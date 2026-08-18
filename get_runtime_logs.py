@@ -3,7 +3,7 @@ import json
 import ssl
 
 TOKEN = "9a5ae91c-0e69-4db5-8097-74c3f87c42cc"
-DEPLOYMENT_ID = "cfaae5b7-7ff7-4ef8-a734-cdca677c3e18"
+DEPLOYMENT_ID = "868d0619-3430-478e-87e2-a3657a094892"
 
 URL = "https://backboard.railway.app/graphql/v2"
 
@@ -32,7 +32,7 @@ def cf_graphql(query, variables=None):
         return {"error": e.code, "body": e.read().decode('utf-8')}
 
 def main():
-    print(f"1️⃣ Querying Deployment Status & Logs for {DEPLOYMENT_ID}...")
+    print("Fetching Container Runtime Logs...")
     q1 = cf_graphql("""
         query deploymentLogs($deploymentId: String!) {
             deploymentLogs(deploymentId: $deploymentId, limit: 50) {
@@ -43,7 +43,7 @@ def main():
     """, {
         "deploymentId": DEPLOYMENT_ID
     })
-    print("Logs Result:", json.dumps(q1, indent=2))
+    print("Logs:", json.dumps(q1, indent=2))
 
 if __name__ == "__main__":
     main()
