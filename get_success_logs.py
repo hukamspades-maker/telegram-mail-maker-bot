@@ -3,7 +3,7 @@ import json
 import ssl
 
 TOKEN = "9a5ae91c-0e69-4db5-8097-74c3f87c42cc"
-DEPLOYMENT_ID = "3391514e-9360-467f-8a70-64130442ee12"
+DEPLOYMENT_ID = "7bddcc34-db6f-43f1-bf14-91c8090c32bf"
 
 URL = "https://backboard.railway.app/graphql/v2"
 

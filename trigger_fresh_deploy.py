@@ -3,7 +3,9 @@ import json
 import ssl
 
 TOKEN = "9a5ae91c-0e69-4db5-8097-74c3f87c42cc"
-DEPLOYMENT_ID = "3391514e-9360-467f-8a70-64130442ee12"
+PROJECT_ID = "2d6e959a-32e6-48f0-a478-b6f556bcf4b4"
+SERVICE_ID = "961cc98b-643b-4689-8ade-348f12bbf478"
+ENV_ID = "c0b3b623-b55b-48e6-b555-ff056e49a111"
 
 URL = "https://backboard.railway.app/graphql/v2"
 
@@ -32,18 +34,16 @@ def cf_graphql(query, variables=None):
         return {"error": e.code, "body": e.read().decode('utf-8')}
 
 def main():
-    print(f"Fetching Container Runtime Logs for {DEPLOYMENT_ID}...")
+    print("1️⃣ Triggering Fresh Deployment of commit 3fcf8de...")
     q1 = cf_graphql("""
-        query deploymentLogs($deploymentId: String!) {
-            deploymentLogs(deploymentId: $deploymentId, limit: 50) {
-                timestamp
-                message
-            }
+        mutation serviceInstanceDeploy($environmentId: String!, $serviceId: String!) {
+            serviceInstanceDeploy(environmentId: $environmentId, serviceId: $serviceId)
         }
     """, {
-        "deploymentId": DEPLOYMENT_ID
+        "environmentId": ENV_ID,
+        "serviceId": SERVICE_ID
     })
-    print("Logs:", json.dumps(q1, indent=2))
+    print("Deploy Result:", json.dumps(q1, indent=2))
 
 if __name__ == "__main__":
     main()

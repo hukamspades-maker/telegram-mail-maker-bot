@@ -5,6 +5,7 @@ WORKDIR /app
 # Prevent Python from writing pyc files and buffering stdout/stderr
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV BUILD_VERSION=v1.0.6_fresh_rebuild
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
