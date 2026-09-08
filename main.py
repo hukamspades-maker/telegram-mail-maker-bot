@@ -13,8 +13,9 @@ from config import BOT_TOKEN, CLEANUP_INTERVAL_MINUTES
 from database.db_manager import DatabaseManager
 from services.webhook_service import WebhookService
 
-from bot.handlers.start import start_handler
+from bot.handlers.start import start_handler, help_handler
 from bot.handlers.create_mail import (
+    handle_select_domain,
     handle_quick_mail,
     handle_custom_mail_start,
     receive_custom_prefix,
@@ -74,7 +75,7 @@ def main():
 
     custom_prefix_conv = ConversationHandler(
         entry_points=[
-            CallbackQueryHandler(handle_custom_mail_start, pattern=r"^mail_custom$")
+            CallbackQueryHandler(handle_custom_mail_start, pattern=r"^do_mail:custom:")
         ],
         states={
             WAITING_CUSTOM_PREFIX: [
@@ -97,13 +98,16 @@ def main():
     )
 
     app.add_handler(CommandHandler(["start", "menu"], start_handler))
+    app.add_handler(CommandHandler("help", help_handler))
     app.add_handler(CommandHandler("admin", handle_admin_panel))
 
     app.add_handler(custom_prefix_conv)
     app.add_handler(login_key_conv)
 
     app.add_handler(CallbackQueryHandler(start_handler, pattern=r"^main_menu$"))
-    app.add_handler(CallbackQueryHandler(handle_quick_mail, pattern=r"^mail_quick$"))
+    app.add_handler(CallbackQueryHandler(help_handler, pattern=r"^mail_help$"))
+    app.add_handler(CallbackQueryHandler(handle_select_domain, pattern=r"^select_domain:"))
+    app.add_handler(CallbackQueryHandler(handle_quick_mail, pattern=r"^do_mail:quick:"))
 
     app.add_handler(CallbackQueryHandler(handle_list_aliases, pattern=r"^mail_list$"))
     app.add_handler(CallbackQueryHandler(handle_copy_alias, pattern=r"^copy:"))

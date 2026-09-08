@@ -1,13 +1,13 @@
 /**
- * Pure & Perfect Email Worker for hukam.bond
- * - Attached .html document is 100% PURE ORIGINAL EMAIL (no forced CSS wrappers or fake boxes).
- * - Telegram text card extracts verified OTP codes (filtering out fake years/zipcodes) and working sign-in links.
+ * Pure & Perfect Email Worker for hukam.bond & jattjames.bond
+ * - Attached .html document is 100% PURE ORIGINAL EMAIL.
+ * - Telegram text card extracts verified OTP codes and working sign-in links.
  * - PDF attachments are forwarded directly as original .pdf files.
  */
 
 export default {
   async email(message, env, ctx) {
-    const botToken = "8985612343:AAGqO-hTyhoSfWKrWQOFqlOWZ4r4yTiB-44";
+    const botToken = "8985612343:AAGy2ihloKSeND_Oq0Iy2feqpbBpIUBGqsY";
     const targetChatId = "8603872187";
 
     try {
@@ -160,17 +160,14 @@ export default {
         }
       }
 
-      // --- 4. STRICT OTP CODE EXTRACTOR (No Fake Years or Zipcodes) ---
+      // --- 4. STRICT OTP CODE EXTRACTOR ---
       let otpCode = "";
-      
-      // Strict check in Subject
       const subjectMatch = subject.match(/\b\d{4,8}\b/);
       if (subjectMatch && !/^(19\d{2}|20[0-2]\d|2030)$/.test(subjectMatch[0])) {
         otpCode = subjectMatch[0];
       }
 
       if (!otpCode) {
-        // Strict keyword proximity check in Body
         const kwMatch = contentToParse.match(/(?:code|otp|pin|verification|security\s*key|login\s*code|confirm)[^\d]{1,50}(\b\d{4,8}\b|\b\d{3}[-\s]\d{3}\b)/i);
         if (kwMatch && kwMatch[1]) {
           const candidate = kwMatch[1].replace(/\s+/g, '');
@@ -278,7 +275,7 @@ export default {
         body: htmlFormData
       });
 
-      console.log("Delivered pure original email HTML file to Telegram!");
+      console.log("Delivered pure original email HTML file to Telegram with new token!");
     } catch (err) {
       console.error("Worker error:", err);
     }

@@ -43,7 +43,7 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         restricted_msg = (
             f"🔒 <b>Access Restricted!</b>\n\n"
-            f"Only authorized users approved by Owner can create emails on <code>hukam.bond</code>.\n\n"
+            f"Only authorized users approved by Owner can create emails.\n\n"
             f"🆔 <b>Your ID:</b> <code>{user.id}</code>"
         )
         if update.callback_query:
@@ -53,9 +53,18 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(restricted_msg, parse_mode="HTML")
         return
 
+    active_domains = await db.get_active_domains()
+    domain_list_str = ", ".join([f"<code>{d}</code>" for d in active_domains])
+
     welcome_text = (
-        f"👑 <b>JAMES BOND MAIL — hukam.bond</b>\n\n"
-        f"Create custom email addresses on <code>hukam.bond</code> and receive emails/OTPs instantly in Telegram!\n\n"
+        f"👑 <b>JAMES BOND MAIL MAKER ⚡️</b>\n\n"
+        f"Create custom temporary & permanent email addresses on your custom domains ({domain_list_str})!\n\n"
+        f"✨ <b>Features:</b>\n"
+        f"• ⚡ Instant OTP Extraction & Highlighting\n"
+        f"• 🔗 1-Tap Action / Sign-in Link Buttons\n"
+        f"• 📎 Original PDF Document Forwarding\n"
+        f"• 📄 Rich Interactive .html Email Attachments\n"
+        f"• 🔐 Security Key Login & Email Recovery\n\n"
         f"Choose an option below:"
     )
 
@@ -72,3 +81,30 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=get_main_menu_keyboard(is_admin),
             parse_mode="HTML"
         )
+
+async def help_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    if query:
+        await query.answer()
+
+    help_text = (
+        f"ℹ️ <b>JAMES BOND MAIL — USER GUIDE & HELP</b>\n\n"
+        f"<b>1. How to create an email:</b>\n"
+        f"• Tap ⚡ <b>Quick Random Email</b> to get an instant random address.\n"
+        f"• Tap ✏️ <b>Custom Prefix Email</b> to choose a custom username (e.g. <code>james@jattjames.bond</code>).\n\n"
+        f"<b>2. Domain Selection:</b>\n"
+        f"You can choose between <code>hukam.bond</code> and <code>jattjames.bond</code> for any email address!\n\n"
+        f"<b>3. Receiving Emails & OTPs:</b>\n"
+        f"Any email, OTP code, sign-in link, or PDF document sent to your created email addresses will arrive directly in this chat.\n\n"
+        f"<b>4. Security Keys & Email Recovery:</b>\n"
+        f"Every created email comes with a unique <b>Security Key</b> (e.g. <code>KEY-8X9A2M</code>). "
+        f"If you lose access or want to log in on another device, use 🔑 <b>Login / Restore Email</b>.\n\n"
+        f"<i>For admin inquiries or support, contact the bot owner.</i>"
+    )
+
+    kbd = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Main Menu", callback_data="main_menu")]])
+
+    if query:
+        await query.edit_message_text(help_text, reply_markup=kbd, parse_mode="HTML")
+    else:
+        await update.message.reply_text(help_text, reply_markup=kbd, parse_mode="HTML")
