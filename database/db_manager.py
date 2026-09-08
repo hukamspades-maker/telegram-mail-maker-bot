@@ -50,19 +50,16 @@ class DatabaseManager:
             except Exception:
                 pass
 
-            # Seed default domains if empty
-            async with db.execute("SELECT COUNT(*) FROM domains") as cursor:
-                count = (await cursor.fetchone())[0]
-                if count == 0:
-                    for domain in DEFAULT_DOMAINS:
-                        try:
-                            await db.execute(
-                                "INSERT INTO domains (domain_name, is_active) VALUES (?, 1)",
-                                (domain.lower().strip(),)
-                            )
-                        except Exception as e:
-                            logger.warning(f"Error seeding domain {domain}: {e}")
-                    await db.commit()
+            # Sync all default domains (INSERT OR IGNORE)
+            for domain in DEFAULT_DOMAINS:
+                try:
+                    await db.execute(
+                        "INSERT OR IGNORE INTO domains (domain_name, is_active) VALUES (?, 1)",
+                        (domain.lower().strip(),)
+                    )
+                except Exception as e:
+                    logger.warning(f"Error seeding domain {domain}: {e}")
+            await db.commit()
 
     async def register_user(self, telegram_id: int, username: str = None, first_name: str = None) -> bool:
         is_owner_or_admin = 1 if telegram_id in ADMIN_IDS else 0
