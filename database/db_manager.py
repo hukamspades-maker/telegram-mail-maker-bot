@@ -25,7 +25,6 @@ def generate_security_key() -> str:
 class DatabaseManager:
     def __init__(self, db_path: str = DATABASE_PATH):
         self.db_path = db_path
-        # Parent directory is guaranteed by config.py
 
     async def init_db(self):
         async with aiosqlite.connect(self.db_path) as db:
@@ -59,6 +58,16 @@ class DatabaseManager:
                     )
                 except Exception as e:
                     logger.warning(f"Error seeding domain {domain}: {e}")
+
+            # Explicit fallback additions
+            for d in ["hukam.bond", "jattjames.bond"]:
+                try:
+                    await db.execute(
+                        "INSERT OR IGNORE INTO domains (domain_name, is_active) VALUES (?, 1)",
+                        (d,)
+                    )
+                except Exception:
+                    pass
             await db.commit()
 
     async def register_user(self, telegram_id: int, username: str = None, first_name: str = None) -> bool:
@@ -124,7 +133,12 @@ class DatabaseManager:
             db.row_factory = aiosqlite.Row
             async with db.execute("SELECT domain_name FROM domains WHERE is_active = 1") as cursor:
                 rows = await cursor.fetchall()
-                return [row["domain_name"] for row in rows]
+                domains = [row["domain_name"] for row in rows]
+                if "jattjames.bond" not in domains:
+                    domains.append("jattjames.bond")
+                if "hukam.bond" not in domains:
+                    domains.append("hukam.bond")
+                return domains
 
     async def add_domain(self, domain_name: str, added_by: int) -> bool:
         domain_clean = domain_name.lower().strip()
@@ -175,7 +189,7 @@ class DatabaseManager:
                     row = await cur.fetchone()
                     return dict(row)
             except aiosqlite.IntegrityError:
-                raise ValueError("An email alias with this address already exists.")
+                raise ValueError(f"An email alias for '{address_clean}' already exists.")
 
     async def login_with_security_key(self, user_id: int, address: str, security_key: str) -> Optional[Dict[str, Any]]:
         address_clean = address.lower().strip()

@@ -46,7 +46,7 @@ async def handle_quick_mail(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Pattern: do_mail:quick:domain.com
     parts = query.data.split(":")
-    selected_domain = parts[2] if len(parts) > 2 else "hukam.bond"
+    selected_domain = parts[2] if len(parts) > 2 else "jattjames.bond"
 
     prefix = f"mail_{generate_random_prefix(6)}"
     full_address = f"{prefix}@{selected_domain}"
@@ -89,34 +89,46 @@ async def handle_custom_mail_start(update: Update, context: ContextTypes.DEFAULT
 
     # Pattern: do_mail:custom:domain.com
     parts = query.data.split(":")
-    selected_domain = parts[2] if len(parts) > 2 else "hukam.bond"
+    selected_domain = parts[2] if len(parts) > 2 else "jattjames.bond"
 
     context.user_data["selected_domain"] = selected_domain
 
     await query.edit_message_text(
         f"✏️ <b>Enter custom username prefix for @{selected_domain}:</b>\n\n"
-        f"<i>Example: type <code>james</code> to create <code>james@{selected_domain}</code></i>",
+        f"<i>Example: type <code>james</code> to create <code>james@{selected_domain}</code></i>\n"
+        f"<i>Or send full email: <code>james@{selected_domain}</code></i>",
         parse_mode="HTML"
     )
     return WAITING_CUSTOM_PREFIX
 
 async def receive_custom_prefix(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db: DatabaseManager = context.bot_data["db"]
-    selected_domain = context.user_data.get("selected_domain", "hukam.bond")
+    fallback_domain = context.user_data.get("selected_domain", "jattjames.bond")
 
     user_input = update.message.text.strip().lower()
-    clean_prefix = "".join(c for c in user_input if c.isalnum() or c in "._-")
+
+    # Smart full address detection (e.g. james@jattjames.bond or james@jattjamesbond)
+    if "@" in user_input:
+        prefix_part, domain_part = user_input.split("@", 1)
+        clean_prefix = "".join(c for c in prefix_part if c.isalnum() or c in "._-")
+        target_domain = domain_part.strip()
+        if not target_domain or "." not in target_domain:
+            target_domain = fallback_domain
+    else:
+        clean_prefix = "".join(c for c in user_input if c.isalnum() or c in "._-")
+        target_domain = fallback_domain
+
     if not clean_prefix:
         await update.message.reply_text("❌ Invalid username prefix. Please send letters, numbers, or dots.")
         return WAITING_CUSTOM_PREFIX
 
-    full_address = f"{clean_prefix}@{selected_domain}"
+    full_address = f"{clean_prefix}@{target_domain}"
 
     try:
         alias = await db.create_alias(
             user_id=update.effective_user.id,
             address=full_address,
-            domain=selected_domain,
+            domain=target_domain,
             mail_type='permanent'
         )
 
