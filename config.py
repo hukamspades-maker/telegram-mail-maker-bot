@@ -10,7 +10,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 ADMIN_IDS = [int(x.strip()) for x in os.getenv("ADMIN_IDS", "8603872187").split(",") if x.strip().isdigit()]
 
 # Default System Domains
-DEFAULT_DOMAINS = [d.strip().lower() for d in os.getenv("DEFAULT_DOMAINS", "hukam.bond,jattjames.bond").split(",") if d.strip()]
+DEFAULT_DOMAINS = [d.strip().lower() for d in os.getenv("DEFAULT_DOMAINS", "hukam.bond").split(",") if d.strip()]
 
 # Webhook Server Settings (Uses Railway PORT dynamically if deployed)
 WEBHOOK_HOST = os.getenv("WEBHOOK_HOST", "0.0.0.0")

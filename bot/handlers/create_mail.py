@@ -2,6 +2,7 @@ import random
 import string
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.constants import KeyboardButtonStyle
 from telegram.ext import ContextTypes, ConversationHandler
 
 from database.db_manager import DatabaseManager
@@ -25,11 +26,21 @@ async def handle_select_domain(update: Update, context: ContextTypes.DEFAULT_TYP
     active_domains = await db.get_active_domains()
 
     if not active_domains:
-        active_domains = ["hukam.bond", "jattjames.bond"]
+        active_domains = ["hukam.bond"]
 
-    title = "⚡ <b>Select Domain for Quick Random Email:</b>" if action_type == "quick" else "✏️ <b>Select Domain for Custom Prefix Email:</b>"
+    # If only 1 domain is configured, jump straight to creation without extra step
+    if len(active_domains) == 1:
+        domain = active_domains[0]
+        if action_type == "quick":
+            query.data = f"do_mail:quick:{domain}"
+            return await handle_quick_mail(update, context)
+        else:
+            query.data = f"do_mail:custom:{domain}"
+            return await handle_custom_mail_start(update, context)
+
+    title = "Select Domain for Quick Random Email:" if action_type == "quick" else "Select Domain for Custom Prefix Email:"
     msg = (
-        f"{title}\n\n"
+        f"<b>{title}</b>\n\n"
         f"Choose which domain you want your new email created on:"
     )
 
@@ -46,7 +57,7 @@ async def handle_quick_mail(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Pattern: do_mail:quick:domain.com
     parts = query.data.split(":")
-    selected_domain = parts[2] if len(parts) > 2 else "jattjames.bond"
+    selected_domain = parts[2] if len(parts) > 2 else "hukam.bond"
 
     prefix = f"mail_{generate_random_prefix(6)}"
     full_address = f"{prefix}@{selected_domain}"
@@ -70,12 +81,12 @@ async def handle_quick_mail(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         kbd = InlineKeyboardMarkup([
-            [InlineKeyboardButton("📋 Copy Address", callback_data=f"copy:{full_address}")],
+            [InlineKeyboardButton("Copy Address", callback_data=f"copy:{full_address}", style=KeyboardButtonStyle.PRIMARY)],
             [
-                InlineKeyboardButton("🗑️ Delete Address", callback_data=f"del:{alias['id']}"),
-                InlineKeyboardButton("➕ Create Another", callback_data="select_domain:quick")
+                InlineKeyboardButton("Delete Address", callback_data=f"del:{alias['id']}", style=KeyboardButtonStyle.DANGER),
+                InlineKeyboardButton("Create Another", callback_data="select_domain:quick", style=KeyboardButtonStyle.SUCCESS)
             ],
-            [InlineKeyboardButton("🔙 Main Menu", callback_data="main_menu")]
+            [InlineKeyboardButton("Main Menu", callback_data="main_menu")]
         ])
 
         await query.edit_message_text(msg, reply_markup=kbd, parse_mode="HTML")
@@ -89,7 +100,7 @@ async def handle_custom_mail_start(update: Update, context: ContextTypes.DEFAULT
 
     # Pattern: do_mail:custom:domain.com
     parts = query.data.split(":")
-    selected_domain = parts[2] if len(parts) > 2 else "jattjames.bond"
+    selected_domain = parts[2] if len(parts) > 2 else "hukam.bond"
 
     context.user_data["selected_domain"] = selected_domain
 
@@ -103,11 +114,11 @@ async def handle_custom_mail_start(update: Update, context: ContextTypes.DEFAULT
 
 async def receive_custom_prefix(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db: DatabaseManager = context.bot_data["db"]
-    fallback_domain = context.user_data.get("selected_domain", "jattjames.bond")
+    fallback_domain = context.user_data.get("selected_domain", "hukam.bond")
 
     user_input = update.message.text.strip().lower()
 
-    # Smart full address detection (e.g. james@jattjames.bond or james@jattjamesbond)
+    # Smart full address detection (e.g. user@hukam.bond)
     if "@" in user_input:
         prefix_part, domain_part = user_input.split("@", 1)
         clean_prefix = "".join(c for c in prefix_part if c.isalnum() or c in "._-")
@@ -143,12 +154,12 @@ async def receive_custom_prefix(update: Update, context: ContextTypes.DEFAULT_TY
         )
 
         kbd = InlineKeyboardMarkup([
-            [InlineKeyboardButton("📋 Copy Address", callback_data=f"copy:{full_address}")],
+            [InlineKeyboardButton("Copy Address", callback_data=f"copy:{full_address}", style=KeyboardButtonStyle.PRIMARY)],
             [
-                InlineKeyboardButton("🗑️ Delete Address", callback_data=f"del:{alias['id']}"),
-                InlineKeyboardButton("➕ Create Another", callback_data="select_domain:custom")
+                InlineKeyboardButton("Delete Address", callback_data=f"del:{alias['id']}", style=KeyboardButtonStyle.DANGER),
+                InlineKeyboardButton("Create Another", callback_data="select_domain:custom", style=KeyboardButtonStyle.SUCCESS)
             ],
-            [InlineKeyboardButton("🔙 Main Menu", callback_data="main_menu")]
+            [InlineKeyboardButton("Main Menu", callback_data="main_menu")]
         ])
 
         await update.message.reply_text(msg, reply_markup=kbd, parse_mode="HTML")
@@ -165,7 +176,7 @@ async def handle_login_key_start(update: Update, context: ContextTypes.DEFAULT_T
         f"🔑 <b>Login / Restore Email Address</b>\n\n"
         f"Please send your email address and Security Key in this format:\n\n"
         f"<code>email@domain.com KEY-XXXXXX</code>\n\n"
-        f"<i>Example: <code>james@jattjames.bond KEY-8A9X2M</code></i>",
+        f"<i>Example: <code>user@hukam.bond KEY-8A9X2M</code></i>",
         reply_markup=get_back_button(),
         parse_mode="HTML"
     )

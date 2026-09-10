@@ -1,5 +1,6 @@
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.constants import KeyboardButtonStyle
 from telegram.ext import ContextTypes, ConversationHandler
 
 from database.db_manager import DatabaseManager
@@ -38,16 +39,16 @@ async def handle_admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     kbd = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("👥 Manage Allowed Users", callback_data="admin_users_list")
+            InlineKeyboardButton("Manage Allowed Users", callback_data="admin_users_list", style=KeyboardButtonStyle.PRIMARY)
         ],
         [
-            InlineKeyboardButton("➕ Add Domain", callback_data="admin_add_domain"),
-            InlineKeyboardButton("🗑️ Remove Domain", callback_data="admin_remove_domain")
+            InlineKeyboardButton("Add Domain", callback_data="admin_add_domain", style=KeyboardButtonStyle.SUCCESS),
+            InlineKeyboardButton("Remove Domain", callback_data="admin_remove_domain", style=KeyboardButtonStyle.DANGER)
         ],
         [
-            InlineKeyboardButton("🧹 Run Expiry Cleanup", callback_data="admin_run_cleanup")
+            InlineKeyboardButton("Run Expiry Cleanup", callback_data="admin_run_cleanup")
         ],
-        [InlineKeyboardButton("🔙 Main Menu", callback_data="main_menu")]
+        [InlineKeyboardButton("Main Menu", callback_data="main_menu")]
     ])
 
     if update.callback_query:
@@ -83,11 +84,11 @@ async def handle_users_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if uid not in ADMIN_IDS:
             if u["is_approved"]:
-                buttons.append([InlineKeyboardButton(f"🚫 Revoke {uname}", callback_data=f"admin_revoke:{uid}")])
+                buttons.append([InlineKeyboardButton(f"Revoke {uname}", callback_data=f"admin_revoke:{uid}", style=KeyboardButtonStyle.DANGER)])
             else:
-                buttons.append([InlineKeyboardButton(f"✅ Grant {uname}", callback_data=f"admin_approve:{uid}")])
+                buttons.append([InlineKeyboardButton(f"Grant {uname}", callback_data=f"admin_approve:{uid}", style=KeyboardButtonStyle.SUCCESS)])
 
-    buttons.append([InlineKeyboardButton("🔙 Back to Admin", callback_data="admin_panel")])
+    buttons.append([InlineKeyboardButton("Back to Admin", callback_data="admin_panel")])
 
     await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(buttons), parse_mode="HTML")
 
@@ -184,8 +185,8 @@ async def handle_remove_domain_list(update: Update, context: ContextTypes.DEFAUL
 
     buttons = []
     for d in domains:
-        buttons.append([InlineKeyboardButton(f"🗑️ Delete @{d}", callback_data=f"del_domain:{d}")])
-    buttons.append([InlineKeyboardButton("🔙 Back to Admin", callback_data="admin_panel")])
+        buttons.append([InlineKeyboardButton(f"Delete @{d}", callback_data=f"del_domain:{d}", style=KeyboardButtonStyle.DANGER)])
+    buttons.append([InlineKeyboardButton("Back to Admin", callback_data="admin_panel")])
 
     await query.edit_message_text(
         "🗑️ <b>Select domain to remove:</b>",

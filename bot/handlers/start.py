@@ -1,4 +1,5 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.constants import KeyboardButtonStyle
 from telegram.ext import ContextTypes
 import logging
 
@@ -26,7 +27,7 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             owner_id = ADMIN_IDS[0]
             try:
                 kbd = InlineKeyboardMarkup([[
-                    InlineKeyboardButton(f"✅ Grant Access to {user.first_name}", callback_data=f"admin_approve:{user.id}")
+                    InlineKeyboardButton(f"Grant Access to {user.first_name}", callback_data=f"admin_approve:{user.id}", style=KeyboardButtonStyle.SUCCESS)
                 ]])
                 await context.bot.send_message(
                     chat_id=owner_id,
@@ -88,21 +89,21 @@ async def help_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer()
 
     help_text = (
-        f"ℹ️ <b>JAMES BOND MAIL — USER GUIDE & HELP</b>\n\n"
+        f"<b>JAMES BOND MAIL — USER GUIDE & HELP</b>\n\n"
         f"<b>1. How to create an email:</b>\n"
-        f"• Tap ⚡ <b>Quick Random Email</b> to get an instant random address.\n"
-        f"• Tap ✏️ <b>Custom Prefix Email</b> to choose a custom username (e.g. <code>james@jattjames.bond</code>).\n\n"
-        f"<b>2. Domain Selection:</b>\n"
-        f"You can choose between <code>hukam.bond</code> and <code>jattjames.bond</code> for any email address!\n\n"
+        f"• Tap <b>Quick Random Email</b> to get an instant random address.\n"
+        f"• Tap <b>Custom Prefix Email</b> to choose a custom username (e.g. <code>user@hukam.bond</code>).\n\n"
+        f"<b>2. Domain:</b>\n"
+        f"Emails are powered by verified domain <code>hukam.bond</code>.\n\n"
         f"<b>3. Receiving Emails & OTPs:</b>\n"
         f"Any email, OTP code, sign-in link, or PDF document sent to your created email addresses will arrive directly in this chat.\n\n"
         f"<b>4. Security Keys & Email Recovery:</b>\n"
         f"Every created email comes with a unique <b>Security Key</b> (e.g. <code>KEY-8X9A2M</code>). "
-        f"If you lose access or want to log in on another device, use 🔑 <b>Login / Restore Email</b>.\n\n"
+        f"If you lose access or want to log in on another device, use <b>Login / Restore Email</b>.\n\n"
         f"<i>For admin inquiries or support, contact the bot owner.</i>"
     )
 
-    kbd = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Main Menu", callback_data="main_menu")]])
+    kbd = InlineKeyboardMarkup([[InlineKeyboardButton("Back to Main Menu", callback_data="main_menu")]])
 
     if query:
         await query.edit_message_text(help_text, reply_markup=kbd, parse_mode="HTML")

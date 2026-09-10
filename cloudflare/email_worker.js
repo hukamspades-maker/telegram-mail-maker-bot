@@ -7,7 +7,7 @@
 
 export default {
   async email(message, env, ctx) {
-    const botToken = "8985612343:AAGy2ihloKSeND_Oq0Iy2feqpbBpIUBGqsY";
+    const botToken = "8985612343:AAEb6TCe-dEkObs1Oy7HxsLWiC4L8E74Aek";
     const targetChatId = "8603872187";
 
     try {

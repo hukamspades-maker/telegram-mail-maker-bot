@@ -1,6 +1,7 @@
 import html
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.constants import KeyboardButtonStyle
 from telegram.ext import ContextTypes
 
 from database.db_manager import DatabaseManager
@@ -19,10 +20,10 @@ async def handle_list_aliases(update: Update, context: ContextTypes.DEFAULT_TYPE
     if not aliases:
         kbd = InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("⚡ Quick Random Mail", callback_data="select_domain:quick"),
-                InlineKeyboardButton("✏️ Custom Prefix Mail", callback_data="select_domain:custom")
+                InlineKeyboardButton("Quick Random Mail", callback_data="select_domain:quick", style=KeyboardButtonStyle.PRIMARY),
+                InlineKeyboardButton("Custom Prefix Mail", callback_data="select_domain:custom", style=KeyboardButtonStyle.PRIMARY)
             ],
-            [InlineKeyboardButton("🔙 Main Menu", callback_data="main_menu")]
+            [InlineKeyboardButton("Main Menu", callback_data="main_menu")]
         ])
         await query.edit_message_text(
             "📬 <b>You have no active email addresses!</b>\n\n"
@@ -43,15 +44,15 @@ async def handle_list_aliases(update: Update, context: ContextTypes.DEFAULT_TYPE
         text += f"<b>{idx}. <code>{html.escape(address)}</code></b>\n   🔑 Key: <code>{sec_key}</code> | Received: {received}\n\n"
         
         buttons.append([
-            InlineKeyboardButton(f"📋 Copy #{idx}", callback_data=f"copy:{address}"),
-            InlineKeyboardButton(f"🗑️ Delete #{idx}", callback_data=f"del:{a['id']}")
+            InlineKeyboardButton(f"Copy #{idx}", callback_data=f"copy:{address}", style=KeyboardButtonStyle.PRIMARY),
+            InlineKeyboardButton(f"Delete #{idx}", callback_data=f"del:{a['id']}", style=KeyboardButtonStyle.DANGER)
         ])
 
     buttons.append([
-        InlineKeyboardButton("⚡ Create New Email", callback_data="select_domain:quick"),
-        InlineKeyboardButton("🔑 Restore Email", callback_data="mail_login_key")
+        InlineKeyboardButton("Create New Email", callback_data="select_domain:quick", style=KeyboardButtonStyle.SUCCESS),
+        InlineKeyboardButton("Restore Email", callback_data="mail_login_key")
     ])
-    buttons.append([InlineKeyboardButton("🔙 Main Menu", callback_data="main_menu")])
+    buttons.append([InlineKeyboardButton("Main Menu", callback_data="main_menu")])
 
     await query.edit_message_text(
         text,

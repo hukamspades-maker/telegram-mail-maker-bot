@@ -60,7 +60,7 @@ class DatabaseManager:
                     logger.warning(f"Error seeding domain {domain}: {e}")
 
             # Explicit fallback additions
-            for d in ["hukam.bond", "jattjames.bond"]:
+            for d in ["hukam.bond"]:
                 try:
                     await db.execute(
                         "INSERT OR IGNORE INTO domains (domain_name, is_active) VALUES (?, 1)",
@@ -68,6 +68,12 @@ class DatabaseManager:
                     )
                 except Exception:
                     pass
+
+            # Purge deprecated jattjames domain if present
+            try:
+                await db.execute("DELETE FROM domains WHERE domain_name LIKE '%jattjames%';")
+            except Exception:
+                pass
             await db.commit()
 
     async def register_user(self, telegram_id: int, username: str = None, first_name: str = None) -> bool:
@@ -133,9 +139,7 @@ class DatabaseManager:
             db.row_factory = aiosqlite.Row
             async with db.execute("SELECT domain_name FROM domains WHERE is_active = 1") as cursor:
                 rows = await cursor.fetchall()
-                domains = [row["domain_name"] for row in rows]
-                if "jattjames.bond" not in domains:
-                    domains.append("jattjames.bond")
+                domains = [row["domain_name"] for row in rows if "jattjames" not in row["domain_name"].lower()]
                 if "hukam.bond" not in domains:
                     domains.append("hukam.bond")
                 return domains
