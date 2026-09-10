@@ -81,12 +81,14 @@ async def handle_quick_mail(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         kbd = InlineKeyboardMarkup([
-            [InlineKeyboardButton("Copy Address", callback_data=f"copy:{full_address}", style=KeyboardButtonStyle.PRIMARY)],
             [
-                InlineKeyboardButton("Delete Address", callback_data=f"del:{alias['id']}", style=KeyboardButtonStyle.DANGER),
-                InlineKeyboardButton("Create Another", callback_data="select_domain:quick", style=KeyboardButtonStyle.SUCCESS)
+                InlineKeyboardButton("Copy Address", callback_data=f"copy:{full_address}", style=KeyboardButtonStyle.PRIMARY),
+                InlineKeyboardButton("Create Another", callback_data="select_domain:quick", style=KeyboardButtonStyle.PRIMARY)
             ],
-            [InlineKeyboardButton("Main Menu", callback_data="main_menu")]
+            [
+                InlineKeyboardButton("Delete Address", callback_data=f"del:{alias['id']}"),
+                InlineKeyboardButton("Main Menu", callback_data="main_menu")
+            ]
         ])
 
         await query.edit_message_text(msg, reply_markup=kbd, parse_mode="HTML")
@@ -154,12 +156,14 @@ async def receive_custom_prefix(update: Update, context: ContextTypes.DEFAULT_TY
         )
 
         kbd = InlineKeyboardMarkup([
-            [InlineKeyboardButton("Copy Address", callback_data=f"copy:{full_address}", style=KeyboardButtonStyle.PRIMARY)],
             [
-                InlineKeyboardButton("Delete Address", callback_data=f"del:{alias['id']}", style=KeyboardButtonStyle.DANGER),
-                InlineKeyboardButton("Create Another", callback_data="select_domain:custom", style=KeyboardButtonStyle.SUCCESS)
+                InlineKeyboardButton("Copy Address", callback_data=f"copy:{full_address}", style=KeyboardButtonStyle.PRIMARY),
+                InlineKeyboardButton("Create Another", callback_data="select_domain:custom", style=KeyboardButtonStyle.PRIMARY)
             ],
-            [InlineKeyboardButton("Main Menu", callback_data="main_menu")]
+            [
+                InlineKeyboardButton("Delete Address", callback_data=f"del:{alias['id']}"),
+                InlineKeyboardButton("Main Menu", callback_data="main_menu")
+            ]
         ])
 
         await update.message.reply_text(msg, reply_markup=kbd, parse_mode="HTML")

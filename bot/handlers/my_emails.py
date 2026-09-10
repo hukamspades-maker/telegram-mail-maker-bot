@@ -44,12 +44,12 @@ async def handle_list_aliases(update: Update, context: ContextTypes.DEFAULT_TYPE
         text += f"<b>{idx}. <code>{html.escape(address)}</code></b>\n   🔑 Key: <code>{sec_key}</code> | Received: {received}\n\n"
         
         buttons.append([
-            InlineKeyboardButton(f"Copy #{idx}", callback_data=f"copy:{address}", style=KeyboardButtonStyle.PRIMARY),
-            InlineKeyboardButton(f"Delete #{idx}", callback_data=f"del:{a['id']}", style=KeyboardButtonStyle.DANGER)
+            InlineKeyboardButton(f"Copy #{idx}", callback_data=f"copy:{address}"),
+            InlineKeyboardButton(f"Delete #{idx}", callback_data=f"del:{a['id']}")
         ])
 
     buttons.append([
-        InlineKeyboardButton("Create New Email", callback_data="select_domain:quick", style=KeyboardButtonStyle.SUCCESS),
+        InlineKeyboardButton("Create New Email", callback_data="select_domain:quick"),
         InlineKeyboardButton("Restore Email", callback_data="mail_login_key")
     ])
     buttons.append([InlineKeyboardButton("Main Menu", callback_data="main_menu")])

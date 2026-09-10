@@ -9,7 +9,7 @@ def get_main_menu_keyboard(is_owner: bool = False) -> InlineKeyboardMarkup:
             InlineKeyboardButton("Custom Prefix Email", callback_data="select_domain:custom", style=KeyboardButtonStyle.PRIMARY)
         ],
         [
-            InlineKeyboardButton("My Active Emails", callback_data="mail_list", style=KeyboardButtonStyle.SUCCESS),
+            InlineKeyboardButton("My Active Emails", callback_data="mail_list"),
             InlineKeyboardButton("Login / Restore Email", callback_data="mail_login_key")
         ],
         [
