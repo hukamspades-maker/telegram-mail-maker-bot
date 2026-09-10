@@ -75,7 +75,8 @@ def main():
 
     custom_prefix_conv = ConversationHandler(
         entry_points=[
-            CallbackQueryHandler(handle_custom_mail_start, pattern=r"^do_mail:custom:")
+            CallbackQueryHandler(handle_custom_mail_start, pattern=r"^do_mail:custom:"),
+            CallbackQueryHandler(handle_select_domain, pattern=r"^select_domain:custom$")
         ],
         states={
             WAITING_CUSTOM_PREFIX: [

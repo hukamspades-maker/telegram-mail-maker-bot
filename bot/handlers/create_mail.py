@@ -17,47 +17,9 @@ def generate_random_prefix(length: int = 6) -> str:
     chars = string.ascii_lowercase + string.digits
     return "".join(random.choice(chars) for _ in range(length))
 
-async def handle_select_domain(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def execute_quick_mail(update: Update, context: ContextTypes.DEFAULT_TYPE, selected_domain: str):
     query = update.callback_query
-    await query.answer()
     db: DatabaseManager = context.bot_data["db"]
-
-    _, action_type = query.data.split(":", 1)
-    active_domains = await db.get_active_domains()
-
-    if not active_domains:
-        active_domains = ["hukam.bond"]
-
-    # If only 1 domain is configured, jump straight to creation without extra step
-    if len(active_domains) == 1:
-        domain = active_domains[0]
-        if action_type == "quick":
-            query.data = f"do_mail:quick:{domain}"
-            return await handle_quick_mail(update, context)
-        else:
-            query.data = f"do_mail:custom:{domain}"
-            return await handle_custom_mail_start(update, context)
-
-    title = "Select Domain for Quick Random Email:" if action_type == "quick" else "Select Domain for Custom Prefix Email:"
-    msg = (
-        f"<b>{title}</b>\n\n"
-        f"Choose which domain you want your new email created on:"
-    )
-
-    await query.edit_message_text(
-        msg,
-        reply_markup=get_domain_selection_keyboard(action_type, active_domains),
-        parse_mode="HTML"
-    )
-
-async def handle_quick_mail(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    db: DatabaseManager = context.bot_data["db"]
-
-    # Pattern: do_mail:quick:domain.com
-    parts = query.data.split(":")
-    selected_domain = parts[2] if len(parts) > 2 else "hukam.bond"
 
     prefix = f"mail_{generate_random_prefix(6)}"
     full_address = f"{prefix}@{selected_domain}"
@@ -83,7 +45,7 @@ async def handle_quick_mail(update: Update, context: ContextTypes.DEFAULT_TYPE):
         kbd = InlineKeyboardMarkup([
             [
                 InlineKeyboardButton("Copy Address", callback_data=f"copy:{full_address}", style=KeyboardButtonStyle.PRIMARY),
-                InlineKeyboardButton("Create Another", callback_data="select_domain:quick", style=KeyboardButtonStyle.PRIMARY)
+                InlineKeyboardButton("Create Another", callback_data=f"do_mail:quick:{selected_domain}", style=KeyboardButtonStyle.PRIMARY)
             ],
             [
                 InlineKeyboardButton("Delete Address", callback_data=f"del:{alias['id']}"),
@@ -96,14 +58,8 @@ async def handle_quick_mail(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.error(f"Error creating quick mail: {e}")
         await query.edit_message_text(f"❌ Error creating email: {e}", reply_markup=get_back_button())
 
-async def handle_custom_mail_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def execute_custom_mail_start(update: Update, context: ContextTypes.DEFAULT_TYPE, selected_domain: str):
     query = update.callback_query
-    await query.answer()
-
-    # Pattern: do_mail:custom:domain.com
-    parts = query.data.split(":")
-    selected_domain = parts[2] if len(parts) > 2 else "hukam.bond"
-
     context.user_data["selected_domain"] = selected_domain
 
     await query.edit_message_text(
@@ -113,6 +69,53 @@ async def handle_custom_mail_start(update: Update, context: ContextTypes.DEFAULT
         parse_mode="HTML"
     )
     return WAITING_CUSTOM_PREFIX
+
+async def handle_select_domain(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    db: DatabaseManager = context.bot_data["db"]
+
+    _, action_type = query.data.split(":", 1)
+    active_domains = await db.get_active_domains()
+
+    if not active_domains:
+        active_domains = ["hukam.bond"]
+
+    # If only 1 domain is configured, jump straight to creation without extra step
+    if len(active_domains) == 1:
+        domain = active_domains[0]
+        if action_type == "quick":
+            return await execute_quick_mail(update, context, domain)
+        else:
+            return await execute_custom_mail_start(update, context, domain)
+
+    title = "Select Domain for Quick Random Email:" if action_type == "quick" else "Select Domain for Custom Prefix Email:"
+    msg = (
+        f"<b>{title}</b>\n\n"
+        f"Choose which domain you want your new email created on:"
+    )
+
+    await query.edit_message_text(
+        msg,
+        reply_markup=get_domain_selection_keyboard(action_type, active_domains),
+        parse_mode="HTML"
+    )
+
+async def handle_quick_mail(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    parts = query.data.split(":")
+    selected_domain = parts[2] if len(parts) > 2 else "hukam.bond"
+    return await execute_quick_mail(update, context, selected_domain)
+
+async def handle_custom_mail_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    parts = query.data.split(":")
+    selected_domain = parts[2] if len(parts) > 2 else "hukam.bond"
+    return await execute_custom_mail_start(update, context, selected_domain)
 
 async def receive_custom_prefix(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db: DatabaseManager = context.bot_data["db"]

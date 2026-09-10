@@ -5,15 +5,15 @@ from typing import List
 def get_main_menu_keyboard(is_owner: bool = False) -> InlineKeyboardMarkup:
     buttons = [
         [
-            InlineKeyboardButton("Quick Random Email", callback_data="select_domain:quick", style=KeyboardButtonStyle.PRIMARY),
-            InlineKeyboardButton("Custom Prefix Email", callback_data="select_domain:custom", style=KeyboardButtonStyle.PRIMARY)
+            InlineKeyboardButton("Quick Random Email", callback_data="do_mail:quick:hukam.bond", style=KeyboardButtonStyle.PRIMARY),
+            InlineKeyboardButton("Custom Prefix Email", callback_data="do_mail:custom:hukam.bond", style=KeyboardButtonStyle.PRIMARY)
         ],
         [
-            InlineKeyboardButton("My Active Emails", callback_data="mail_list"),
-            InlineKeyboardButton("Login / Restore Email", callback_data="mail_login_key")
+            InlineKeyboardButton("My Active Emails", callback_data="mail_list", style=KeyboardButtonStyle.SUCCESS),
+            InlineKeyboardButton("Login / Restore Email", callback_data="mail_login_key", style=KeyboardButtonStyle.SUCCESS)
         ],
         [
-            InlineKeyboardButton("Help & Info", callback_data="mail_help")
+            InlineKeyboardButton("Help & Info", callback_data="mail_help", style=KeyboardButtonStyle.DANGER)
         ]
     ]
     if is_owner:
