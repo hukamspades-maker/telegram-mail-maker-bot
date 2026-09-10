@@ -66,6 +66,7 @@ async def execute_custom_mail_start(update: Update, context: ContextTypes.DEFAUL
         f"✏️ <b>Enter custom username prefix for @{selected_domain}:</b>\n\n"
         f"<i>Example: type <code>james</code> to create <code>james@{selected_domain}</code></i>\n"
         f"<i>Or send full email: <code>james@{selected_domain}</code></i>",
+        reply_markup=get_back_button(),
         parse_mode="HTML"
     )
     return WAITING_CUSTOM_PREFIX
@@ -119,23 +120,35 @@ async def handle_custom_mail_start(update: Update, context: ContextTypes.DEFAULT
 
 async def receive_custom_prefix(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db: DatabaseManager = context.bot_data["db"]
-    fallback_domain = context.user_data.get("selected_domain", "hukam.bond")
+    active_domains = await db.get_active_domains()
+    if not active_domains:
+        active_domains = ["hukam.bond"]
+
+    fallback_domain = context.user_data.get("selected_domain", active_domains[0])
+    if fallback_domain not in active_domains:
+        fallback_domain = active_domains[0]
 
     user_input = update.message.text.strip().lower()
+    logger.info(f"Custom prefix request from user {update.effective_user.id}: '{user_input}'")
 
     # Smart full address detection (e.g. user@hukam.bond)
     if "@" in user_input:
         prefix_part, domain_part = user_input.split("@", 1)
         clean_prefix = "".join(c for c in prefix_part if c.isalnum() or c in "._-")
-        target_domain = domain_part.strip()
-        if not target_domain or "." not in target_domain:
+        target_domain = domain_part.strip().lower()
+        if target_domain not in active_domains:
             target_domain = fallback_domain
     else:
         clean_prefix = "".join(c for c in user_input if c.isalnum() or c in "._-")
         target_domain = fallback_domain
 
     if not clean_prefix:
-        await update.message.reply_text("❌ Invalid username prefix. Please send letters, numbers, or dots.")
+        await update.message.reply_text(
+            "❌ <b>Invalid username prefix.</b> Please send letters, numbers, or dots.\n\n"
+            f"<i>Example: send <code>myname</code> to get <code>myname@{target_domain}</code></i>",
+            reply_markup=get_back_button(),
+            parse_mode="HTML"
+        )
         return WAITING_CUSTOM_PREFIX
 
     full_address = f"{clean_prefix}@{target_domain}"
@@ -161,7 +174,7 @@ async def receive_custom_prefix(update: Update, context: ContextTypes.DEFAULT_TY
         kbd = InlineKeyboardMarkup([
             [
                 InlineKeyboardButton("Copy Address", callback_data=f"copy:{full_address}", style=KeyboardButtonStyle.PRIMARY),
-                InlineKeyboardButton("Create Another", callback_data="select_domain:custom", style=KeyboardButtonStyle.PRIMARY)
+                InlineKeyboardButton("Create Another", callback_data=f"do_mail:custom:{target_domain}", style=KeyboardButtonStyle.PRIMARY)
             ],
             [
                 InlineKeyboardButton("Delete Address", callback_data=f"del:{alias['id']}"),
@@ -170,10 +183,19 @@ async def receive_custom_prefix(update: Update, context: ContextTypes.DEFAULT_TY
         ])
 
         await update.message.reply_text(msg, reply_markup=kbd, parse_mode="HTML")
+        return ConversationHandler.END
+    except ValueError as ve:
+        logger.warning(f"Prefix '{clean_prefix}' conflict: {ve}")
+        await update.message.reply_text(
+            f"⚠️ <b>{ve}</b>\n\n<b>Please send another username prefix:</b>",
+            reply_markup=get_back_button(),
+            parse_mode="HTML"
+        )
+        return WAITING_CUSTOM_PREFIX
     except Exception as e:
+        logger.error(f"Error creating custom email: {e}", exc_info=True)
         await update.message.reply_text(f"❌ Error creating custom email: {e}", reply_markup=get_back_button())
-
-    return ConversationHandler.END
+        return ConversationHandler.END
 
 async def handle_login_key_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query

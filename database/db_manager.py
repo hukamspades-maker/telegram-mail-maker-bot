@@ -181,19 +181,43 @@ class DatabaseManager:
 
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
-            try:
-                cursor = await db.execute("""
-                    INSERT INTO email_aliases (address, user_id, domain, mail_type, security_key, expires_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (address_clean, user_id, domain.lower(), mail_type, sec_key, expires_at))
-                await db.commit()
-                alias_id = cursor.lastrowid
-                
-                async with db.execute("SELECT * FROM email_aliases WHERE id = ?", (alias_id,)) as cur:
-                    row = await cur.fetchone()
-                    return dict(row)
-            except aiosqlite.IntegrityError:
-                raise ValueError(f"An email alias for '{address_clean}' already exists.")
+
+            # Check if alias already exists
+            async with db.execute("SELECT * FROM email_aliases WHERE address = ?", (address_clean,)) as cur:
+                existing = await cur.fetchone()
+
+            if existing:
+                existing_dict = dict(existing)
+                # If it belongs to this user, reactivate and return it!
+                if existing_dict["user_id"] == user_id:
+                    await db.execute("UPDATE email_aliases SET is_active = 1 WHERE id = ?", (existing_dict["id"],))
+                    await db.commit()
+                    existing_dict["is_active"] = 1
+                    return existing_dict
+                elif not existing_dict["is_active"]:
+                    # Inactive/deleted alias from another user, allow claiming
+                    await db.execute("""
+                        UPDATE email_aliases SET user_id = ?, is_active = 1, security_key = ?, expires_at = ?
+                        WHERE id = ?
+                    """, (user_id, sec_key, expires_at, existing_dict["id"]))
+                    await db.commit()
+                    existing_dict["user_id"] = user_id
+                    existing_dict["is_active"] = 1
+                    existing_dict["security_key"] = sec_key
+                    return existing_dict
+                else:
+                    raise ValueError(f"Username prefix '{address_clean.split('@')[0]}' is already taken. Please choose a different username.")
+
+            cursor = await db.execute("""
+                INSERT INTO email_aliases (address, user_id, domain, mail_type, security_key, expires_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (address_clean, user_id, domain.lower(), mail_type, sec_key, expires_at))
+            await db.commit()
+            alias_id = cursor.lastrowid
+            
+            async with db.execute("SELECT * FROM email_aliases WHERE id = ?", (alias_id,)) as cur:
+                row = await cur.fetchone()
+                return dict(row)
 
     async def login_with_security_key(self, user_id: int, address: str, security_key: str) -> Optional[Dict[str, Any]]:
         address_clean = address.lower().strip()

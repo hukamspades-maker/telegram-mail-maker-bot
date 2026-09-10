@@ -80,10 +80,15 @@ def main():
         ],
         states={
             WAITING_CUSTOM_PREFIX: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, receive_custom_prefix)
+                MessageHandler(filters.TEXT & ~filters.COMMAND, receive_custom_prefix),
+                CallbackQueryHandler(start_handler, pattern=r"^main_menu$")
             ]
         },
-        fallbacks=[CommandHandler("cancel", cancel_custom_prefix)]
+        fallbacks=[
+            CommandHandler("cancel", cancel_custom_prefix),
+            CallbackQueryHandler(start_handler, pattern=r"^main_menu$")
+        ],
+        allow_reentry=True
     )
 
     login_key_conv = ConversationHandler(
@@ -92,10 +97,15 @@ def main():
         ],
         states={
             WAITING_LOGIN_INPUT: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, receive_login_input)
+                MessageHandler(filters.TEXT & ~filters.COMMAND, receive_login_input),
+                CallbackQueryHandler(start_handler, pattern=r"^main_menu$")
             ]
         },
-        fallbacks=[CommandHandler("cancel", cancel_custom_prefix)]
+        fallbacks=[
+            CommandHandler("cancel", cancel_custom_prefix),
+            CallbackQueryHandler(start_handler, pattern=r"^main_menu$")
+        ],
+        allow_reentry=True
     )
 
     app.add_handler(CommandHandler(["start", "menu"], start_handler))
